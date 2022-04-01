@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<style>
+		#pers{ position: absolute; width: 50px; height: 50px; border: 1px solid;	top: 0px; left: 0px;}
+		#controls { position:absolute; left:1000px; top:20px }
+		#area div { position:absolute; background:#000; }
+		#menu { position: absolute; }
+		#poi-area div{ position: absolute; border-radius: 100%; border: 1px; width: 25px; height: 25px; background-color: yellow; text-align: center; padding-top: 3px; }
+		div p { text-align: center; }
+		#coin { top: 0px; left: 0px; }
+		#enemy div { position: absolute; border-radius: 100%; border: 1px; width: 25px; height: 25px; background-color: red; }
+		#m-pr div { position: absolute; border-radius: 100%; border: 1px; width: 50px; height: 50px; background-color: blue; }
+		#res { position: absolute; left: 100px; }
+		#life-t div { position: absolute; border-radius: 100%; border: 1px; width: 25px; height: 25px; background-color: purple; }
+	</style>
+
+</head>
+<body onkeypress="move(event.keyCode)" onload="bm()">
+
+	<div id="menu">
+		<h3>Score</h3>
+		<div id="points"></div>
+		
+		<h3>Lives</h3>
+		<div id="life"></div>
+	</div>
+	
+	<form id="res">
+		<input type="button" value="Restart" onclick="bm()">
+	</form>
+	
+	<div id="area"></div>
+	<div id="poi-area"></div>
+	<div id="pers"></div>
+	<div id="enemy"></div>
+	<div id="m-pr"></div>
+	<div id="life-t"></div>
+	
+	<p id="cord"></p>
+	
+	<script>
+	
+	// top, left, direction, length
+	var str = "";
+	var x = 0;
+	var y = 0;
+	var borders = [];
+
+	function bm(){
+	
+		borders = [[300, 400, "v", 300, "b1"], [300, 700, "h", 300, "b2"], [300, 400, "h", 300, "b3"], [600, 400, "v", 300, "b4"]];
+	
+		document.getElementById('area').innerHTML = '';
+	
+		function rc(min, max) {
+
+			var sx = [];
+
+			// generate directions
+			sx.push(Math.floor(Math.random() * (max - min + 1) + min) * 100);
+			sx.push(Math.floor(Math.random() * (max - min + 1) + min) * 100);
+
+			// generate positions
+			i = Math.floor(Math.random() * (1 - 0 + 1) + 0);
+
+			for(var i = 0; i < 1; i++){
+				if(i == 1){
+					sx.push("v")
+				}else{
+					sx.push("h")
+				}
+			}
+
+			// general length
+			sx.push(Math.floor(Math.random() * (3 - 1 + 1) + 1) * 100);
+
+			// general id
+			sx.push("b" + (borders.length + 1))
+		
+			return sx;
+		}	
+
+		for(var i = 0; i < 3; i++){
+			borders.push(rc(1, 6))
+		}		
+		
+		// creat borders
+		for(var i = 0; i < borders.length; i++){
+			str = (borders[i][2] == "v") ? "width:" + borders[i][3] + "px; height:1px" : "height:" + borders[i][3] + "px; width:1px"; 
+			document.getElementById("area").innerHTML += "<div id="+borders[i][4]+" style='top:"+borders[i][0]+"px; left:"+borders[i][1]+"px; "+str+"'></div>";
+		}
+
+		
+	}
+
+		
+		
+		// move box
+		var obj = document.getElementById("pers");	
+		
+		//points
+		var poi = document.getElementById("points").innerHTML = 0;
+		
+		//top, left, id of coins
+		var coins = [[100, 100, 'coin1'], [200, 200, 'coin2']];
+		var key = 0;
+		
+		//creat coins
+		for(var i = 0; i < coins.length; i++){
+			document.getElementById("poi-area").innerHTML += "<div id="+coins[i][2]+" style='margin-top:"+coins[i][0]+"px; margin-left:"+coins[i][1]+"px'>$</div>"
+		}
+		
+		//enemy top, left, id
+		var en = [[200, 800, 'en1'], [0, 500, 'en2']]
+		
+		// creat enemies
+		for(var i = 0; i < en.length; i++){
+			document.getElementById("enemy").innerHTML += "<div id="+en[i][2]+" style='margin-top:"+en[i][0]+"px; margin-left:"+en[i][1]+"px'></div>"
+		}
+		
+		//mega prize top, left
+		var mpr = [400, 500]
+		
+		//creat mega-prize
+		document.getElementById("m-pr").innerHTML += "<div id='megprize' style='margin-top:"+mpr[0]+"px; margin-left:"+mpr[1]+"px'></div>"
+
+		//lives
+		var life = document.getElementById('life').innerHTML = 1;
+		
+		//life taking enemies
+		var lt = [50, 750]
+		document.getElementById('life-t').innerHTML += "<div id='life-take' style='margin-top:"+lt[0]+"px; margin-left:"+lt[1]+"px'></div>"
+
+		function move(dir){
+		
+		//alert(dir.keyCode)
+			
+			// chack stop
+			if( stop(dir) || life == 0 ){
+				return false;	
+			}
+			
+			
+			
+					
+			// move
+			switch(dir) {
+				case 56: // top
+					y -= 50;
+					obj.style.marginTop = y + "px";
+					break;
+				case 50: // bottom
+					y += 50;
+					obj.style.marginTop = y + "px";
+					break;
+				case 54: // right:
+					x += 50;
+					obj.style.marginLeft = x + "px";	
+					break;
+				case 52: // left
+					x -= 50;		
+					obj.style.marginLeft = x + "px";
+			}
+			
+			document.getElementById("cord").innerHTML = x + " - " + y;
+			
+			getprize();
+			takelife();
+			
+			//points effect
+			for(var i = 0; i < coins.length; i++){
+				if(y == coins[i][0] && x == coins[i][1]){
+					poi += 100;
+					key ++;
+					document.getElementById(coins[i][2]).style.display = 'none';
+					coins[i].splice(0, 3)
+					
+					if(key == 2){
+						document.getElementById(borders[0][4]).style.display = 'none';
+						borders[0].splice(0, 4)
+					}					
+				}
+				
+			}
+			
+			//enemies effect
+			for(var i = 0; i < en.length; i++){
+				if(y == en[i][0] && x == en[i][1]){
+					poi -= 100
+					document.getElementById(en[i][2]).style.display = 'none';
+					en[i].splice(0, 3)
+				}
+			}
+						
+			
+			document.getElementById("points").innerHTML = poi;
+			
+		}
+		
+		function stop(dir){
+		
+			for(var i = 0; i < borders.length; i++){
+			
+				// chack vertical
+				if(dir == 56 || dir == 50){
+	
+					if(borders[i][2] == "v"){
+					
+						// chack cordinats
+						if( dir == 56 && y == borders[i][0] && x >= borders[i][1] && x <= borders[i][1] + borders[i][3] || dir == 50 && y == borders[i][0] - 50 && x >= borders[i][1] && x <= borders[i][1] + borders[i][3]){
+							return true;
+						}
+						
+					}	
+					
+				// chack horizontal	
+				}else{
+									
+					if(borders[i][2] == "h"){
+					
+						// chack cordinats
+						if( dir == 54 && x == borders[i][1] - 50 && y >= borders[i][0] && y <= borders[i][0] + borders[i][3] || dir == 52 && x == borders[i][1] && y >= borders[i][0] && y <= borders[i][0] + borders[i][3]){
+							return true;
+						}
+						
+					}					
+				
+				}
+				
+			}
+	
+		}
+		
+		function getprize(){
+		
+			for(var i = 0; i < mpr.length; i++){
+			
+				if(y == mpr[0] && x == mpr[1]){
+					poi += 1000;
+					document.getElementById("megprize").style.display = 'none';
+					mpr.splice(0, 2);
+				}
+				
+			}
+			
+		}
+		
+		function takelife(){
+			for(var i = 0; i < lt.length; i++){
+				if(y == lt[0] && x == lt[1]){
+					life--
+					document.getElementById('life-t').style.display = 'none';
+					lt.splice(0, 2)
+					break;
+				}
+			}
+			document.getElementById('life').innerHTML = life;
+			
+		}
+		
+
+
+	</script>
+	
+</body>
+</html>
